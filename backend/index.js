@@ -47,7 +47,11 @@ connectDB();
 
 // Middleware for CORS
 const allowedOrigins = [
-  'https://voyageiq-client.onrender.com',
+  'https://vercel.com',
+  'https://onerender.com',
+  'https://voyageiq.onrender.com',
+  'https://voyageiq.onrender.com/api/v1',
+  'https://voyageiq.vercel.app',
   'http://localhost:5173', // For local development
   // Add other origins as needed
 ];

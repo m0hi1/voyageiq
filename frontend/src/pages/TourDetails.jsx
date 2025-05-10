@@ -82,7 +82,7 @@ const TourDetails = () => {
     apiData: fetchedTour,
     loading: isLoadingTour,
     error: fetchError,
-  } = useFetch(`${BASE_URL}/tour/${id}`);
+  } = useFetch(`${BASE_URL}/tours/${id}`); // Changed /tour/ to /tours/
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -369,6 +369,8 @@ const TourDetails = () => {
                 price={price}
                 avgRating={avgRating} // Pass the numeric avgRating
                 reviewsArray={reviewsArray}
+                tourId={id} // Pass the tour ID
+                tourMaxGroupSize={maxGroupSize} // Pass the tour's max group size
               />
             </div>
           </div>

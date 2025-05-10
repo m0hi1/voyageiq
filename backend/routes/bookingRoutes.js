@@ -151,7 +151,7 @@ router.use(verifyToken);
  *       500:
  *         description: Internal server error
  */
-router.post('/', createBooking); // User creates their own booking
+router.post('/', verifyToken, createBooking); // Added verifyToken
 
 /**
  * @swagger
