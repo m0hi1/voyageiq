@@ -14,9 +14,113 @@ const generateToken = (id, role) => {
   });
 };
 
+// Check if authentication service is available
+const checkStatus = async (req, res) => {
+  try {
+    return res.status(200).json({
+      success: true,
+      message: 'Authentication service is available',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: 'Authentication service error',
+      error: error.message
+    });
+  }
+};
+
+// Handle Google Authentication
+const googleAuth = async (req, res) => {
+  try {
+    const { email, name, googleId, photoURL } = req.body;
+
+    if (!email || !googleId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email and Google ID are required',
+      });
+    }
+
+    // Check if user already exists with the provided email
+    let user = await User.findOne({ email });
+    
+    if (user) {
+      // If user exists but doesn't have googleId (registered via email/password)
+      if (!user.googleId) {
+        // Link the Google account to existing user
+        user.googleId = googleId;
+        user.authProvider = 'google';
+        // Only update photo if user doesn't have one or the new one is provided
+        if (!user.photo && photoURL) {
+          user.photo = photoURL;
+        }
+        await user.save();
+        console.log('Linked Google account to existing email user:', email);
+      } else if (user.googleId !== googleId) {
+        // The user has a different Google ID stored - this could be suspicious
+        console.warn('Potential account conflict - different Google ID for same email:', email);
+        return res.status(409).json({
+          success: false,
+          message: 'Account conflict detected. Please contact support.',
+        });
+      }
+      // If user exists and has matching googleId, continue with login
+    } else {
+      // Create new user with Google credentials
+      // Generate a username from the email or name
+      const username = name ? 
+        name.replace(/\s+/g, '_').toLowerCase() + '_' + Math.floor(Math.random() * 1000) : 
+        email.split('@')[0] + '_' + Math.floor(Math.random() * 1000);
+      
+      user = new User({
+        username,
+        email,
+        googleId,
+        photo: photoURL || '',
+        role: 'user',
+        authProvider: 'google'
+      });
+      
+      await user.save();
+      console.log('Created new user via Google auth:', email);
+    }
+
+    // Generate JWT token
+    const accessToken = generateToken(user._id, user.role);
+
+    // Set token in HTTP-only cookie
+    res.cookie('accessToken', accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      maxAge: 24 * 60 * 60 * 1000,
+    });
+
+    // Don't send password back
+    const userResponse = user.toObject();
+    delete userResponse.password;
+
+    res.status(200).json({
+      success: true,
+      message: 'Google authentication successful',
+      token: accessToken,
+      data: userResponse,
+    });
+  } catch (error) {
+    console.error('Google Auth Error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal Server Error',
+      error: error.message,
+    });
+  }
+};
+
 const registerUser = async (req, res) => {
   try {
-    const { username, email, password, photo } = req.body; // Removed role from destructuring
+    const { username, email, password, photo, firebaseUid } = req.body;
 
     // Check if user already exists
     const existingUser = await User.findOne({ $or: [{ email }, { username }] });
@@ -31,16 +135,19 @@ const registerUser = async (req, res) => {
     const salt = await bcryptjs.genSalt(10);
     const hashedPassword = await bcryptjs.hash(password, salt);
 
-    // Create new user
+    // Create new user with optional Firebase UID
     const newUser = new User({
       username,
       email,
       password: hashedPassword,
       photo,
       role: 'user', // Always set role to 'user' for public registration
+      firebaseUid: firebaseUid || null, // Store Firebase UID if provided
+      authProvider: 'local' // This is a password-based registration
     });
 
     await newUser.save();
+    console.log('New user registered:', email);
 
     // Don't send password back
     const userResponse = newUser.toObject();
@@ -63,14 +170,22 @@ const registerUser = async (req, res) => {
 
 const loginUser = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, firebaseUid } = req.body;
 
     // Check if the user exists
     const user = await User.findOne({ email }).select('+password'); // Explicitly select password
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: 'Invalid credentials - User not found',
+        message: 'User not found. Please register first.',
+      });
+    }
+
+    // If the user is registered via Google, don't allow password login
+    if (user.authProvider === 'google' && !user.password) {
+      return res.status(400).json({
+        success: false,
+        message: 'This account uses Google login. Please log in with Google instead.',
       });
     }
 
@@ -81,6 +196,13 @@ const loginUser = async (req, res) => {
         success: false,
         message: 'Invalid credentials - Incorrect password',
       });
+    }
+
+    // If Firebase UID is provided but user doesn't have one stored, update it
+    if (firebaseUid && !user.firebaseUid) {
+      user.firebaseUid = firebaseUid;
+      await user.save();
+      console.log('Updated user with Firebase UID:', email);
     }
 
     // Generate JWT token
@@ -122,6 +244,7 @@ const loginUser = async (req, res) => {
 
 const logoutUser = async (req, res) => {
   try {
+    // Clear the access token cookie
     res.cookie('accessToken', '', {
       httpOnly: true,
       expires: new Date(0), // Set expiry to a past date
@@ -317,4 +440,6 @@ export {
   forgetPassword,
   refreshToken,
   resetPassword,
+  googleAuth,
+  checkStatus,
 };

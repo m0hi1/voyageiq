@@ -1,12 +1,16 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { FaStar, FaImage } from 'react-icons/fa'; // Added FaImage
 import PropTypes from 'prop-types';
 import CalculateAvg from '../utils/CalculateAvg';
-import { useState } from 'react'; // Added useState
+import { useState, useContext } from 'react'; // Added useState & useContext
+import { AuthContext } from '../contexts/AuthContext';
+import { toast } from 'react-toastify';
 
 const TourCard = ({ tour }) => {
   const { photo, title, city, price, desc, _id, reviews, featured } = tour;
   const [imageError, setImageError] = useState(false); // Added imageError state
+  const { user } = useContext(AuthContext);
+  const navigate = useNavigate();
 
   // Ensure CalculateAvg receives an array, making it more robust.
   const { avgRating } = CalculateAvg(reviews || []);
@@ -23,6 +27,15 @@ const TourCard = ({ tour }) => {
 
   const handleImageError = () => {
     setImageError(true);
+  };
+
+  // Handle booking click with authentication check
+  const handleBookClick = (e) => {
+    if (!user) {
+      e.preventDefault();
+      toast.info('Please log in to book tours');
+      navigate('/login');
+    }
   };
 
   return (
@@ -80,6 +93,7 @@ const TourCard = ({ tour }) => {
         <Link
           to={`/tours/${_id}`}
           className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition-all duration-300 ease-in-out transform hover:scale-105 text-sm"
+          onClick={handleBookClick}
         >
           Book Now
         </Link>

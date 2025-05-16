@@ -66,12 +66,12 @@ const Booking = ({
   const handleChange = e => {
     setBookingDetails(prev => ({ ...prev, [e.target.id]: e.target.value }));
   };
-
   const handleSubmit = async e => {
     e.preventDefault();
 
     if (!user) {
       toast.error('Please Sign In first');
+      navigate('/login');
       return;
     }
 
@@ -124,88 +124,101 @@ const Booking = ({
             <div>({reviewsArray.length})</div>
           </span>
         </div>
-      </div>
-
-      <div className="py-6 space-y-4">
+      </div>      <div className="py-6 space-y-4">
         <h5 className="text-[18px] md:text-2xl font-semibold">
           Booking Information
         </h5>
-        <form onSubmit={handleSubmit}>
-          <div>
-            <input
-              className="booking_input"
-              type="text"
-              placeholder="Full Name"
-              id="fullName"
-              value={bookingDetails.fullName}
-              required
-              onChange={handleChange}
-            />
+        
+        {!user ? (
+          <div className="border border-gray-300 rounded-lg p-6 bg-gray-50 text-center">
+            <p className="text-gray-700 mb-4">
+              Please log in to book this tour. Booking is only available for logged-in users.
+            </p>
+            <button 
+              onClick={() => navigate('/login')} 
+              className="btn w-full"
+            >
+              Log In to Book
+            </button>
           </div>
-          <div>
-            <input
-              className="booking_input"
-              type="text"
-              placeholder="Contact No."
-              id="phone"
-              value={bookingDetails.phone}
-              required
-              onChange={handleChange}
-            />
-          </div>
-          <div>
-            <input
-              className="booking_input"
-              type="number"
-              placeholder="Number of Persons?"
-              id="guestSize"
-              value={bookingDetails.guestSize}
-              min="1"
-              required
-              onChange={handleChange}
-            />
-          </div>
-          <div>
-            <input
-              className="booking_input"
-              type="date"
-              id="date"
-              value={bookingDetails.date}
-              min={currentDate}
-              required
-              onChange={handleChange}
-            />
-          </div>
-          <div className="mt-12">
-            <div className="flex my-4 justify-between">
-              <span>Price per person: </span>
-              <p className="font-semibold">Rs. {price}</p>
+        ) : (
+          <form onSubmit={handleSubmit}>
+            <div>
+              <input
+                className="booking_input"
+                type="text"
+                placeholder="Full Name"
+                id="fullName"
+                value={bookingDetails.fullName}
+                required
+                onChange={handleChange}
+              />
             </div>
-            <div className="flex my-4 justify-between">
-              <span>Guests: </span>
-              <p className="font-semibold">{bookingDetails.guestSize}</p>
+            <div>
+              <input
+                className="booking_input"
+                type="text"
+                placeholder="Contact No."
+                id="phone"
+                value={bookingDetails.phone}
+                required
+                onChange={handleChange}
+              />
             </div>
-            <div className="flex my-4 justify-between">
-              <span>Subtotal: </span>
-              <p className="font-semibold">
-                Rs. {bookingDetails.subtotal.toFixed(2)}
-              </p>
+            <div>
+              <input
+                className="booking_input"
+                type="number"
+                placeholder="Number of Persons?"
+                id="guestSize"
+                value={bookingDetails.guestSize}
+                min="1"
+                required
+                onChange={handleChange}
+              />
             </div>
-            <div className="flex my-4 border-b-[1px] pb-2 border-black justify-between">
-              <span>GST ({GST_RATE * 100}%): </span>
-              <p className="font-semibold">
-                Rs. {bookingDetails.gstAmount.toFixed(2)}
-              </p>
+            <div>
+              <input
+                className="booking_input"
+                type="date"
+                id="date"
+                value={bookingDetails.date}
+                min={currentDate}
+                required
+                onChange={handleChange}
+              />
             </div>
-            <div className="flex my-6 justify-between font-bold text-lg">
-              <span>Total Payable: </span>
-              <p>Rs. {bookingDetails.finalPrice.toFixed(2)}</p>
+            <div className="mt-12">
+              <div className="flex my-4 justify-between">
+                <span>Price per person: </span>
+                <p className="font-semibold">Rs. {price}</p>
+              </div>
+              <div className="flex my-4 justify-between">
+                <span>Guests: </span>
+                <p className="font-semibold">{bookingDetails.guestSize}</p>
+              </div>
+              <div className="flex my-4 justify-between">
+                <span>Subtotal: </span>
+                <p className="font-semibold">
+                  Rs. {bookingDetails.subtotal.toFixed(2)}
+                </p>
+              </div>
+              <div className="flex my-4 border-b-[1px] pb-2 border-black justify-between">
+                <span>GST ({GST_RATE * 100}%): </span>
+                <p className="font-semibold">
+                  Rs. {bookingDetails.gstAmount.toFixed(2)}
+                </p>
+              </div>
+              <div className="flex my-6 justify-between font-bold text-lg">
+                <span>Total Payable: </span>
+                <p>Rs. {bookingDetails.finalPrice.toFixed(2)}</p>
+              </div>
             </div>
-          </div>
-          <button type="submit" className="btn w-full">
-            Book Now
-          </button>
-        </form>
+            <button type="submit" className="btn w-full">
+              Book Now
+            </button>
+          </form>
+        )}
       </div>
     </div>
   );

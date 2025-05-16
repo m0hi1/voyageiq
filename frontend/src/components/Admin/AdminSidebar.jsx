@@ -26,7 +26,7 @@ const AdminSidebar = () => {
   return (
     <aside className="w-64 bg-white shadow-lg p-4 space-y-2">
       <div className="text-center py-4 mb-4 border-b">
-        <h1 className="text-2xl font-bold text-BaseColor">Voyagiq Admin</h1>
+        <h1 className="text-2xl font-bold text-BaseColor">VoyageIQ Admin</h1>
       </div>
       <nav className="space-y-1">
         <NavLink to="/admin/dashboard" className={navLinkClasses}>

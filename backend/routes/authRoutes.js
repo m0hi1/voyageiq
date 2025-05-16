@@ -6,7 +6,9 @@ import {
   logoutUser,
   refreshToken,
   resetPassword,
+  googleAuth,
 } from '../controllers/authController.js';
+import { checkStatus } from '../controllers/statusController.js';
 // import { verifyToken } from '../middleware/authMiddleware.js'; // verifyToken is not used directly on these routes in the current setup
 
 const router = express.Router();
@@ -291,5 +293,59 @@ router.patch('/reset-password/:token', resetPassword);
  *         description: Internal server error
  */
 router.post('/refresh-token', refreshToken);
+
+/**
+ * @swagger
+ * /auth/google:
+ *   post:
+ *     summary: Authenticate or register user with Google
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - googleId
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: user@gmail.com
+ *               name:
+ *                 type: string
+ *                 example: John Doe
+ *               googleId:
+ *                 type: string
+ *                 example: 109878765432112345678
+ *               photoURL:
+ *                 type: string
+ *                 example: https://lh3.googleusercontent.com/a/photo
+ *     responses:
+ *       200:
+ *         description: Authentication successful
+ *       400:
+ *         description: Invalid input parameters
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/google', googleAuth);
+
+/**
+ * @swagger
+ * /auth/status:
+ *   head:
+ *     summary: Check if authentication service is available
+ *     tags: [Auth]
+ *     responses:
+ *       200:
+ *         description: Authentication service is operational
+ *       500:
+ *         description: Authentication service error
+ */
+router.head('/status', checkStatus);
+router.get('/status', checkStatus);
 
 export default router;

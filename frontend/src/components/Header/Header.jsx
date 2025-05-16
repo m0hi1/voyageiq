@@ -5,6 +5,8 @@ import { AuthContext } from '../../contexts/AuthContext';
 import { toast } from 'react-toastify';
 import { BiMenu } from 'react-icons/bi';
 import { IoClose } from 'react-icons/io5';
+import BASE_URL from '../../utils/config';
+import { clearToken } from '../../utils/firebase-auth';
 import {
   FaHome,
   FaMapMarkedAlt,
@@ -30,14 +32,33 @@ const Header = () => {
   useEffect(() => {
     isScrolledRef.current = isScrolled;
   }, [isScrolled]);
-
-  const handleLogout = () => {
-    dispatch({ type: 'LOGOUT' });
-    if (isMenuOpen) {
-      setMenuOpen(false);
+  const handleLogout = async () => {
+    try {
+      // 1. Clear Firebase authentication
+      await clearToken();
+      
+      // 2. Call our backend logout endpoint to clear cookies
+      await fetch(`${BASE_URL}/auth/logout`, {
+        method: 'POST',
+        credentials: 'include', // Important for cookies
+      });
+      
+      // 3. Update our local state
+      dispatch({ type: 'LOGOUT' });
+      
+      if (isMenuOpen) {
+        setMenuOpen(false);
+      }
+      
+      navigate('/home');
+      toast.info('Logged out successfully');
+    } catch (error) {
+      console.error('Logout error:', error);
+      toast.error('Error during logout. Please try again.');
+      
+      // Forcefully clear local state anyway
+      dispatch({ type: 'LOGOUT' });
     }
-    navigate('/home');
-    toast.info('Logged Out');
   };
 
   useEffect(() => {
@@ -87,9 +108,9 @@ const Header = () => {
   const mobileIconSize = 'w-5 h-5'; // Consistent icon size for mobile menu
 
   // Determine header classes based on scroll state
-  let headerDynamicClasses = 'z-50 transition-all duration-300 ease-in-out';
+  let headerDynamicClasses = 'z-50 ';
   let navDynamicClasses =
-    'w-full flex justify-between items-center transition-all duration-300 ease-in-out';
+    'w-full flex justify-between items-center  ';
 
   if (isScrolled) {
     headerDynamicClasses +=
@@ -97,7 +118,7 @@ const Header = () => {
     navDynamicClasses += ' px-4 sm:px-6 py-2.5';
   } else {
     // Initially, header is part of the flow (relative or static)
-    headerDynamicClasses += ' relative bg-white shadow-md'; // Using relative for z-index consistency if ever needed
+    headerDynamicClasses += ' relative bg-white '; // Using relative for z-index consistency if ever needed
     navDynamicClasses += ' container mx-auto px-5 py-3 md:py-1';
   }
 

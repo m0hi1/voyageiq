@@ -5,8 +5,7 @@ import BASE_URL from '../../utils/config';
 import { IoIosPricetags, IoIosSearch } from 'react-icons/io';
 import { BsCalendarDate } from 'react-icons/bs';
 import { FaPeopleGroup, FaUserGroup } from 'react-icons/fa6';
-
-// Removed: import './SearchBar.css';
+ import './SearchBar.css';
 
 const SearchBar = () => {
   const [isLoading, setIsLoading] = useState(false);
