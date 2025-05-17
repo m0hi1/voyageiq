@@ -1,9 +1,6 @@
 import express from 'express';
 import cookieParser from 'cookie-parser';
 import compression from 'compression';
-import cors from 'cors';
-import helmet from 'helmet';
-import rateLimit from 'express-rate-limit';
 
 import config from './config/index.js';
 import { errorHandler } from './middleware/errorHandler.js';
